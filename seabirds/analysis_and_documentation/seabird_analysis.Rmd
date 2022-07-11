@@ -1,0 +1,135 @@
+---
+title: "Seabird Analysis"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    number_sections: false
+---
+# Information
+*Author: Ross Morton*
+
+> The following notebook is to analyse the birds_clean.csv file.
+This raw data set is seabirds_raw.xls and is stored within the raw_data sub
+folder.
+
+[Link to raw data](clean_data/birds_cleaned.csv)
+
+[Link to cleaning script](data_cleaning_scripts/seabirds_clean_script.R)
+
+[Link to cleaned data](raw_data/seabirds_raw.xls)
+
+> Questions whicch are being analysed
+1. Which bird had the most individual sightings?
+2. Which bird had the highest total count?
+3. Which bird had the highest total count above a latitude of -30?
+4. How many different types of birds were only ever seen in groups of 1?
+5. How many penguins were seen? (Hint: there are many types of penguin)
+
+> Installations of the following packages need to be made prior to running the 
+script:
+
++ {tidyverse}
+
+
+# Read in Libraries
+```{r}
+library(tidyverse)
+```
+
+
+# Read in the file for analysis 
+```{r}
+birds <- read_csv(here::here("clean_data/birds_cleaned.csv"))
+```
+
+# 1. Which bird has the most individual sightings
+Most individual sightings- count of _recordings_ for each bird
+Filter to obtain the largest number with slice_max
+`mutate()` has been used instead of summary to keep the 
+
+>Note that the same birds of different age/sex/plumage have been joined together
+in the cleaning process.
+
+```{r}
+birds %>% 
+  select(contains("species_")) %>% 
+  group_by(species_common_name) %>% 
+  # Only used mutate to keep the names
+  mutate(number_individual_sightings = n()) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  slice_max(number_individual_sightings, n = 1)
+```
+
+# 2. Which bird had the highest total count?
+
+
+```{r}
+birds %>% 
+  group_by(species_common_name) %>% 
+  summarise(species_scientific_name,
+            species_abbreviation,
+            total_bird_count = sum(number_birds)) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  slice_max(total_bird_count, n = 1)
+```
+
+
+However as the number is capped at 99,999- the total number could be higher for
+another bird. This value just designates over 100,000 were seen.
+Therefore, whilst unlikely the most could be the following instead:
+
+```{r}
+birds %>% 
+  filter(number_birds >= 99999 & 
+           species_common_name != "Short-tailed shearwater") %>% 
+  select(-record_id, -latitude, -longitude)
+```
+
+
+# 3. Which bird had the highest total count above a latitude of -30?
+
+Complete similar to before but filter the results for latitude > -30
+
+```{r}
+birds %>% 
+  filter(latitude > -30) %>% 
+  group_by(species_common_name) %>% 
+  summarise(species_scientific_name,
+            species_abbreviation,
+            total_bird_count = sum(number_birds)) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  slice_max(total_bird_count, n = 1)
+```
+
+
+# 4. How many different types of birds were only ever seen in groups of 1?
+
+Filter the number_birds (was count) to 1. Determine the distinct/unique names
+then summarise with the count of the rows.
+
+```{r}
+birds %>% 
+  filter(number_birds == 1) %>% 
+  distinct(species_common_name) %>% 
+  summarise(number_bird_types = n())
+```
+
+
+# 5. How many penguins were seen? (Hint: there are many types of penguin)
+
+Filter to penguins using `str_detect()` and `regex`. Then sum the number of
+penguins.
+
+
+```{r}
+birds %>% 
+  filter(str_detect(species_common_name, "[Pp]enguin")) %>% 
+  summarise(number_penguins_seen = sum(number_birds))
+```
+
+
