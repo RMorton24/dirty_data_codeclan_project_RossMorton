@@ -109,14 +109,21 @@ birds %>%
 
 # 4. How many different types of birds were only ever seen in groups of 1?
 
-Filter the number_birds (was count) to 1. Determine the distinct/unique names
+Key word is *only ever seen*
+Find if the birds have ever been seen with more that one by grouping and using
+max.
+Then Filter for those with a max of 1. Determine the distinct/unique names
 then summarise with the count of the rows.
 
 ```{r}
 birds %>% 
-  filter(number_birds == 1) %>% 
+  group_by(species_common_name) %>% 
+  mutate(only_seen_by_itself = max(number_birds) == 1) %>% 
+  ungroup() %>% 
+  filter(only_seen_by_itself == TRUE) %>% 
   distinct(species_common_name) %>% 
   summarise(number_bird_types = n())
+
 ```
 
 
