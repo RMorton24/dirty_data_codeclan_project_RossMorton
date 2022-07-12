@@ -1,0 +1,48 @@
+---
+title: "Halloween Candy Analysis"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    number_sections: false
+---
+# Information
+Author: Ross Morton
+
+> The following notebook is to analyse the meteor_landings_clean.csv file.
+This raw data set is meteor_landings_raw.csv and is stored within the /data sub
+folder.
+
+[Link to raw data](raw_data/)
+
+[Link to cleaning script](cleaning_script/halloween_candy_clean_script.R)
+
+[Link to cleaned data](01_data/halloween_candy_clean.csv)
+
+> Purpose of this file is to analyse some particular points of the data set.
+Primarilay this is:
+
+>1. What is the total number of candy ratings given across the three years. (Number of candy ratings, not the number of raters. Don’t count missing values)
+2. What was the average age of people who are going out trick or treating?
+3. What was the average age of people who are not going trick or treating?
+4. For each of joy, despair and meh, which candy bar received the most of these ratings?
+5. How many people rated Starburst as despair?
+>>For the next three questions, count despair as -1, joy as +1, and meh as 0.
+>6. What was the most popular candy bar by this rating system for each gender in the dataset ?
+7. What was the most popular candy bar in each year?
+8. What was the most popular candy bar by this rating for people in US, Canada, UK, and all other countries?
+
+
+> Installations of the following packages need to be made prior to running the 
+script:
+>>+ {tidyverse}
++ {testthat}
++ {assertr}
+
+
+# Read in Libraries
+```{r}
+library(tidyverse)
+```
+
