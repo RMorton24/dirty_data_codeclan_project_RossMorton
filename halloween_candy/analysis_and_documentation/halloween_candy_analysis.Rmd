@@ -46,3 +46,189 @@ script:
 library(tidyverse)
 ```
 
+
+
+```{r}
+current_name <- c("^p[:alpha:]*_l", "orange", "species")
+
+change_to <- c("sepal_length", "ddd", "ddd")
+b <- clean_names(iris)
+
+b <- b %>% column_name_replace(current_name, change_to)
+b
+# column_name_replace(clean_names(iris), current_name, change_to)
+```
+
+
+```{r}
+str_detect(names(clean_names(iris)),"sepal_length")
+str_which(names(clean_names(iris)),"^p[:alpha:]*_l")
+```
+
+
+
+
+
+
+```{r}
+hwc_2017 %>% 
+  select_if(str_detect(colnames(.), "^l.*y.*k"))
+```
+
+```{r}
+a2016_2017 <- names(hwc_2016)[which(!(names(hwc_2016) %in% names(hwc_2017)))]
+
+a2017_2016 <- names(hwc_2017)[which(!(names(hwc_2017) %in% names(hwc_2016)))]
+
+a2015_2017 <- names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2017)))]
+
+a2017_2015 <- names(hwc_2017)[which(!(names(hwc_2017) %in% names(hwc_2015)))]
+
+a2015_2016 <- names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2016)))]
+
+a2016_2015 <- names(hwc_2016)[which(!(names(hwc_2016) %in% names(hwc_2015)))]
+
+tlist <- lst(a2015_2016, a2016_2015,
+           a2016_2017, a2017_2016,
+           a2015_2017, a2017_2015)
+data.frame(lapply(tlist, `length<-`, max(lengths(tlist)))) %>% view()
+  #mutate(across(.fns = ~str_split(.x, "_"))) %>% view()
+```
+
+
+```{r}
+hwc_2015 <- read_xlsx(here::here("raw_data/boing-boing-candy-2015.xlsx"))
+
+hwc_2016 <- read_xlsx(here::here("raw_data/boing-boing-candy-2016.xlsx"))
+
+hwc_2017 <- read_xlsx(here::here("raw_data/boing-boing-candy-2017.xlsx"))
+
+
+
+
+# Clean data --------------------------------------------------------------
+
+# Search string - uses regex input
+old_vector <- c("how_old", "trick|going_out", "country", "state_prov", "_gender",
+                "brown_globs", "third_party", "bonkers", "raisins",
+                "kissa", "late_hersh", "^l.*y.*k",
+                "sweetums")
+# output name (!must match the length of )
+new_vector <- c("age", "trick_or_treat", "country", "region", "gender",
+                "annonym_brown_globs", "independent_m_ms", "bonkers", "raisins",
+                "hersheys_kisses", "hersheys_dark_chocolate", "licorice",
+                "sweetums")
+
+hwc_2015 <- hwc_2015 %>% 
+  select(1:3 , starts_with("[")) %>% 
+  clean_names() %>% 
+  column_name_replace(old_vector, new_vector) %>% 
+  rowid_to_column("id_num") %>% 
+  mutate(id_num = as.numeric(paste0("2015",str_pad(id_num, 5, pad = "0"))))
+
+  #select(-starts_with(c("please","fill", "that_dress", "if_you","guess", "check")))
+
+hwc_2016 <- hwc_2016 %>% 
+  select(1:6 , starts_with("["), -ends_with("Ignore"), 
+         -contains(c("DVD", "board"))) %>%
+  clean_names() %>% 
+  column_name_replace(old_vector, new_vector) %>% 
+  rowid_to_column("id_num") %>% 
+  mutate(id_num = as.numeric(paste0("2016", str_pad(id_num, 5, pad = "0"))))
+
+hwc_2017 <- hwc_2017 %>%
+  select(1:6 , starts_with("Q6"), -contains(c("housewives", "board"))) %>%
+  rename_with(~str_remove(.x, "^Q[:digit:]")) %>% 
+  clean_names() %>% 
+  column_name_replace(old_vector, new_vector)
+
+
+bind_rows(hwc_2017, hwc_2016, hwc_2015)
+
+# a2016_2017 <- names(hwc_2016)[which(!(names(hwc_2016) %in% names(hwc_2017)))]
+# 
+# a2017_2016 <- names(hwc_2017)[which(!(names(hwc_2017) %in% names(hwc_2016)))]
+# 
+# a2015_2017 <- names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2017)))]
+# 
+# a2017_2015 <- names(hwc_2017)[which(!(names(hwc_2017) %in% names(hwc_2015)))]
+# 
+# a2015_2016 <- names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2016)))]
+# 
+# a2016_2015 <- names(hwc_2016)[which(!(names(hwc_2016) %in% names(hwc_2015)))]
+# 
+# tlist <- lst(a2015_2016, a2016_2015,
+#            a2016_2017, a2017_2016,
+#            a2015_2017, a2017_2015)
+# data.frame(lapply(tlist, `length<-`, max(lengths(tlist)))) %>% view()
+```
+
+```{r}
+candy %>% 
+  filter(str_detect(country, "(?<![Aa])(?i)us")) %>% 
+  distinct(country)
+
+candy %>% 
+  filter(str_detect(country, "(?i)[esd] s[ta]|(?<![Aa])(?i)u[ sd]{1,2}|(?i)m[ue]r{1,2}|Tru")) %>% 
+  distinct(country)
+
+candy %>% 
+  filter(str_detect(country, "^Not")) %>% 
+  distinct(country)
+
+candy %>% 
+  filter(str_detect(str_to_title(str_remove_all(country, "[:punct:]")), "(?i)[esd] s[ta]")) %>% 
+  distinct(country)
+
+candy %>% 
+  filter(str_detect(str_to_title(str_remove_all(country, "[:punct:]")), "(?i)uk|d k|^(?i)En[dg]|(?i)Scot")) %>% 
+  distinct(country)
+
+
+candy %>% 
+  filter(str_detect(str_to_title(str_remove_all(country, "[:punct:]")), "See")) %>% 
+  distinct(country)
+```
+
+
+```{r}
+candy %>% 
+  mutate(country = str_to_title(str_remove_all(country, "[:punct:]|(?i)the "))) %>% 
+  mutate(country = case_when(
+    !is.na(as.numeric(country)) | str_detect(country, "^Not") ~ NA_character_,
+    #str_detect(country, "^Not") ~ NA_character_,
+    str_detect(country, 
+               paste0("(?i)[esd] s[ta]|(?<![Aa])(?i)u[ sd]{1,2}|(?i)m[ue]r{1,2}",
+                      "|Tru|y{4}$|(?i)w [yj]|(?i)ca[rl][oi]|(?i)pit|(?i)^Ala")) 
+               ~ "United States",
+    str_detect(country, "(?i)uk|d k|^(?i)En[dg]|(?i)Scot") ~ "United Kingdom",
+    str_detect(country, "(?i)can") ~ "Canada",
+    country == "España" ~ "Spain",
+    #region %in% candy$country ~ region,
+    # str_detect(country, "(?<![Aa])(?i)us") ~ "United States",
+    # str_detect(country, "(?i)m[eu]rica") ~ "United States",
+    TRUE ~ country
+  )) %>% 
+  distinct(country) %>%
+  arrange(country)
+```
+
+
+
+
+
+
+```{r}
+candy %>% 
+  mutate(age = str_extract(age, "[:digit:]{1,3}[\\.[:digit:]]{0,5}")) %>% 
+  mutate(age = if_else(as.numeric(age) < 5, NA_real_, as.numeric(age)))
+```
+
+```{r}
+candy %>% 
+  pivot_longer((str_which(names(candy), "region")+1):last_col(), 
+               names_to = "sweet_name", values_to = "thoughts") %>% 
+  group_by(thoughts) %>% 
+  summarise(count = n())
+```
+
