@@ -8,4 +8,4 @@ the cleaning scripts, data and analysis for each tasks
 
 [Halloween Candy Data Cleaning and Analysis](halloween_candy/)
 
-[Seabirds Data Cleaning and Analysis](seabirdsy/)
+[Seabirds Data Cleaning and Analysis](seabirds/)
