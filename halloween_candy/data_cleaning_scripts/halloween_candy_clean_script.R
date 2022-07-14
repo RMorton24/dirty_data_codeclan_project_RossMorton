@@ -14,8 +14,17 @@
 ## 
 ## Output:
 ##  halloween_candy_clean.rds : 
-##      Cleaned data of .csv file.
-##      - 
+##      Cleaned data of as .rds file.
+##      - Import in all data sets and functions for cleaning
+##      - Modify the column names in each data set for alignment/remove extras
+##      - Add year and id_num columns for ease when data is combined
+##      - Combine all three datasets using the 2017 data as the primary
+##      - Complete pivot longer to make the analysis easier (note this will 
+##        provide duplications of rows before the candy results)
+##      - Clean the age and country columns
+##      - Check the candy column (warnings may appear if incorrect but will 
+##        continue running script - please read and clean columns if needed)
+##      - Write the data to a halloween_candy_clean.rds
 ## 
 ##
 ##/////////////////////////////////////////////////////////////////////////////
@@ -24,13 +33,19 @@
 ##   Packages required to be installed-
 ##        {tidyverse}
 ##        {janitor}
+##        {readxl}
 ##        {assertr}
+##        {rstudioapi}
 ##
 ##
 ##    Data file require:
 ##      -  boing-boing-candy-2015.xlsx
 ##      - boing-boing-candy-2016.xlsx
 ##      - boing-boing-candy-2017.xlsx
+##
+##
+##    At the end of the script, you will be asked if you would like to remove
+##    the variables from your global environment.
 ##
 ## ////////////////////////////////////////////////////////////////////////////
 
@@ -40,22 +55,27 @@ library(tidyverse)
 library(readxl)
 library(janitor)
 library(assertr)
+library(rstudioapi)
 
 
 # Load in functions -------------------------------------------------------
 
 # Load in the `column_name_replace()` function
-source(here::here("data_cleaning_scripts/column_rename_function.R"))
+source(here::here("functions/column_rename_function.R"))
+
+# Load in the `column_validity()` function
+source(here::here("functions/column_validity_function.R"))
 
 
 # Read in data ------------------------------------------------------------
-# Note that some columns will be re
+# Add 2015 halloween candy data
 hwc_2015 <- read_xlsx(here::here("raw_data/boing-boing-candy-2015.xlsx"))
 
+# Add 2016 halloween candy data
 hwc_2016 <- read_xlsx(here::here("raw_data/boing-boing-candy-2016.xlsx"))
 
+# Add 2017 haloween candy data
 hwc_2017 <- read_xlsx(here::here("raw_data/boing-boing-candy-2017.xlsx"))
-
 
 
 
@@ -72,48 +92,72 @@ new_vector <- c("age", "trick_or_treat", "country", "region", "gender",
                 "hersheys_kisses", "hersheys_dark_chocolate", "licorice",
                 "sweetums", "id_num")
 
+# Clean the 2015 column data
 hwc_2015 <- hwc_2015 %>% 
-  select(2:3 , starts_with("[")) %>% 
-  clean_names() %>% 
+  # Remove columns that are not required
+  select(contains(c("how old", "trick or")), starts_with("[")) %>% 
+  # Clean the names to snake_case
+  clean_names() %>%
+  # Find if any columns match the old_vector and replace with new_vector
   column_name_replace(old_vector, new_vector) %>% 
+  # Add row ID column and mutate to add 2015 and pad to 9 digits
   rowid_to_column("id_num") %>% 
   mutate(id_num = as.numeric(paste0("2015",str_pad(id_num, 5, pad = "0")))) %>% 
+  # Add year column
   mutate(data_year = 2015L, .after = id_num)
-  #select(-starts_with(c("please","fill", "that_dress", "if_you","guess", "check")))
 
+
+# Clean 2016 data
 hwc_2016 <- hwc_2016 %>% 
-  select(2:6 , starts_with("["), -ends_with("Ignore"), 
-         -contains(c("DVD", "board"))) %>%
+  # Select and remove columns not required
+  select(contains(c("trick or", " gender", "how old", "country", "state, prov")),
+         starts_with("["), -ends_with("Ignore"), -contains(c("DVD", "board"))) %>%
+  # Convert to snake_case
   clean_names() %>% 
+  # Find if any columns match the old_vector and replace with new_vector
   column_name_replace(old_vector, new_vector) %>% 
+  # Add row ID column and mutate to add 2016 and pad to 9 digits
   rowid_to_column("id_num") %>% 
-  mutate(data_year = 2017L, .after = id_num) %>% 
   mutate(id_num = as.numeric(paste0("2016",str_pad(id_num, 5, pad = "0")))) %>% 
+  # Add year column
   mutate(data_year = 2016L, .after = id_num)
 
+# Clean 2017 data
 hwc_2017 <- hwc_2017 %>%
-  select(1:6 , starts_with("Q6"), -contains(c("housewives", "board"))) %>%
-  rename_with(~str_remove(.x, "^Q[:digit:]")) %>% 
+  # Select and remove columns
+  select(contains(c("GOING OUT", " GENDER", " AGE", "COUNTRY", "STATE, PROV")), 
+         starts_with("Q6"), -contains(c("housewives", "board"))) %>%
+  # Remove the question numbering
+  rename_with(~str_remove(.x, "^Q[:digit:]")) %>%
+  # Convert to snake_case
   clean_names() %>% 
+  # Find if any columns match the old_vector and replace with new_vector
   column_name_replace(old_vector, new_vector) %>% 
+  # Convert row ID column and mutate to add 2017 and pad to 9 digits
   mutate(id_num = as.numeric(paste0("2017", 
-                                    str_pad(row_number(), 5, pad = "0")))) %>% 
+        str_pad(row_number(), 5, pad = "0"))),
+         .before = 1) %>% 
+  # Add year column
   mutate(data_year = 2017L, .after = id_num)
 
 
 
 # Combine data sets -------------------------------------------------------
 
-candy <- bind_rows(hwc_2017, hwc_2016, hwc_2015)
+candy_clean <- bind_rows(hwc_2017, hwc_2016, hwc_2015)
 
 
 # Clean Row data ----------------------------------------------------------
   
-candy <- candy %>% 
+candy_clean <- candy_clean %>% 
   # Extract the numbers from the character array (will cause NA's for missing)
   mutate(age = str_extract(age, "[:digit:]{1,3}[\\.[:digit:]]{0,5}")) %>% 
-  # If age is below 5 then set to an error
-  mutate(age = if_else(as.numeric(age) < 5, NA_real_, as.numeric(age))) %>% 
+  # If age is below 3 or above 122 (oldest ever person) then set to an error
+  mutate(age = case_when(
+    as.numeric(age) < 3 | as.numeric(age) > 122 ~ NA_real_,
+    TRUE ~ as.numeric(age)
+  )) %>% 
+  # Remove all punctuation and "the" from country column
   mutate(country = str_to_title(str_remove_all(country, "[:punct:]|(?i)the "))) %>% 
   # Correct the country names
   mutate(country = case_when(
@@ -133,38 +177,53 @@ candy <- candy %>%
     # Otherwise set to current country
     TRUE ~ country
   )) %>% 
+  # Replace missing values in gender column with "I'd rather not say"
+  mutate(gender = if_else(is.na(gender), "I'd rather not say", gender)) %>% 
   # Convert to pivot for easier analysis
   # NOTE THAT THIS WILL DUPLICATE THE FIRST FEW ROWS BEFORE "REGION"
-  pivot_longer((str_which(names(candy), "region")+1):last_col(), 
+  pivot_longer((str_which(names(candy_clean), "region")+1):last_col(), 
                  names_to = "sweet_name", values_to = "thoughts")
 
 
+
+# Check validity of candy thoughts ----------------------------------------
+
+# Check if the "thoughts" column only has "DESPAIR.", "JOY" or "MEH" or NA's
+column_validity(candy_clean, "thoughts" ,"^(?i)despair$|^(?i)joy$|^(?i)meh$")
+
+# Check if the trick or treat column is yes or no only (still has NA's)
+column_validity(candy_clean, "trick_or_treat" ,"Yes|No")
+
+
 # Write Output -------------------------------------------------------------
-write_rds(candy, here::here("clean_data/halloween_candy_clean.rds"))
+
+# File is compressed since size >100MB otherwise
+saveRDS(candy_clean, here::here("clean_data/halloween_candy_clean.rds"),
+        compress = TRUE)
 
 
+# Clean the environment ---------------------------------------------------
+
+ask_for_clear <- showQuestion("Finished Script - Clean Environment?", 
+                              "Do you want to clean Environment variables?
+                              Note: this will only clean varibles created
+                              within this script.",
+                              cancel = "No")
+if (ask_for_clear == TRUE){
+  rm(candy_clean,
+     hwc_2015,
+     hwc_2016,
+     hwc_2017,
+     new_vector,
+     old_vector,
+     column_name_replace,
+     column_validity,
+     ask_for_clear)
+}else{
+  rm(ask_for_clear)
+}
 
 
-# 
-# names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2016)))]
-# 
-# names(hwc_2016)[which(!(names(hwc_2016) %in% names(hwc_2017)))]
-# # 
-# names(hwc_2015)[which(!(names(hwc_2015) %in% names(hwc_2017)))]
-# 
-# names(hwc_2017)[which(!(names(hwc_2017) %in% names(hwc_2016)))]
-
-# What is the total number of candy ratings given across the three years. 
-# (Number of candy ratings, not the number of raters. Don’t count missing values)
-# What was the average age of people who are going out trick or treating?
-#   What was the average age of people who are not going trick or treating?
-#   For each of joy, despair and meh, which candy bar received the most of these ratings?
-#   How many people rated Starburst as despair?
-#   For the next three questions, count despair as -1, joy as +1, and meh as 0.
-# 
-# What was the most popular candy bar by this rating system for each gender in the dataset ?
-#   What was the most popular candy bar in each year?
-#   What was the most popular candy bar by this rating for people in US, Canada, UK, and all other countries?
 
 
 

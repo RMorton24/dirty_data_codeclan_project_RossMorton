@@ -14,7 +14,14 @@
 ## Output:
 ##    birds_clean.csv : 
 ##      Cleaned data of .xls file.
-##      - 
+##      - Load in the bird data codes to aid in loading columns correctly
+##      - Load in shipping data and convert longitude / latitude columns
+##      - Load in bird data
+##      - Rename columns, select columns and remove missing bird data
+##      - Join with shipping data using the record id
+##      - Clean the species columns by removing age, plumage and sex characters
+##      - If the record id and species data is the same, then combine since
+##        age etc. has now been removed.
 ## 
 ##
 ##/////////////////////////////////////////////////////////////////////////////
@@ -24,10 +31,11 @@
 ##        {tidyverse}
 ##        {janitor}
 ##        {readxl}
+##        {rstudioapi}
 ##
 ##
 ##    Data file require:
-##        seabirds_clean.csv
+##        seabirds_raw.xls
 ##
 ## ////////////////////////////////////////////////////////////////////////////
 
@@ -36,6 +44,7 @@
 library(tidyverse)
 library(readxl)
 library(janitor)
+library(rstudioapi)
 
 
 
@@ -94,23 +103,7 @@ birds <- read_xls(here::here("raw_data/seabirds_raw.xls"),
   select(-record) %>% 
   ungroup() %>% 
   distinct()
-  
-
-
-
-
-# mutate(species_common_name = str_remove_all(species_common_name, 
-  #                                             " [A-Z0-9]{2,5}")) %>% 
-  # mutate(species_scientific_name = str_remove_all(species_scientific_name, 
-  #                                             " [A-Z0-9]{2,5}")) %>% 
-  # mutate(species_abbreviation = str_remove_all(species_abbreviation, 
-  #                                                 " [A-Z0-9]{2,5}")) %>% 
-  # arrange(species_scientific_name)
-
-#46320
-
- # birds %>%
- #   filter(!is.na(species_abbreviation)) %>% view()
+ 
 
 
 ## Write output ------------------------------------------------------------
@@ -121,47 +114,21 @@ write_csv(birds, here::here("clean_data/birds_cleaned.csv"))
 
 # Clean global environment ------------------------------------------------
 
-#rm(list = ls())
-
-# birds %>%
-#   summarise(across(.fns = ~sum(is.na(.x)))) %>%
-#   view()
-
-
-
-# b <- birds %>% 
-#   filter(is.na(latitude)) %>%
-#   distinct(record_id) %>% pull()
-#          
-# 
-# birds_raw <- read_xls(here::here("raw_data/seabirds.xls"),
-#                       sheet = "Bird data by record ID", 
-#                       col_types = bird_code_class) %>% 
-#   clean_names() %>% 
-#   rename_with(~str_remove(.x, "_tax.*"))
-# 
-# birds %>%
-#   filter(is.na(count)) %>% 
-#   view()
-# 
-# c <- birds %>% 
-#   filter(is.na(species_scientific_name))
-# 
-# 
-# birds_raw %>% 
-#   filter(str_detect(species_common_name, "[A-Z1-9]{2,5}")) %>% 
-#   view()
-# 
-# 
-# birds %>% 
-#   summarise(across(.fns = ~sum(is.na(.x)))) %>% 
-#   view()
-# 
-# 
-# birds_raw %>% 
-#   summarise(across(.fns = ~sum(is.na(.x)))) %>% 
-#   view()
-
-
-
-
+ask_for_clear <- showQuestion("Finished Script - Clean Environment?", 
+                              "Do you want to clean Environment variables?
+                              Note: this will only clean varibles created
+                              within this script.",
+                              cancel = "No")
+if (ask_for_clear == TRUE){
+  rm(candy_clean,
+     hwc_2015,
+     hwc_2016,
+     hwc_2017,
+     new_vector,
+     old_vector,
+     column_name_replace,
+     column_validity,
+     ask_for_clear)
+}else{
+  rm(ask_for_clear)
+}

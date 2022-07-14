@@ -1,6 +1,6 @@
 #' Converts names of columns
 #'
-#' Searching for strings (can have issues `regex`) with `old_names` before 
+#' Searching for strings (can use `regex`) with `old_names` before 
 #' changing them to the new names stored within `new_names`.
 #'
 #' @param .data 	A data frame, data frame extension (e.g. a tibble), 
@@ -17,23 +17,8 @@
 #' 
 column_name_replace <- function(.data, old_names, new_names){
   
-  # # Determine the location of names to replace which match vector check
-  # old_index <- str_which(names(.data), str_c(old_names, collapse = "|"))
-  # 
-  # # Extract an array of terms which have been used
-  # string_used <- na.omit(str_extract(names(.data), 
-  #                                    str_c(old_names, collapse = "|")))
-  # 
-  # # Obtain the index of names which are to be used for replacement
-  # new_index <- str_which(old_names, 
-  #                        str_c(string_used, collapse = "|"))
-  # 
-  # # Change the variable names
-  # .data %>% 
-  #   rename_with(~ new_names[new_index], .cols = all_of(old_index))
-  
-
-  
+  stopifnot("Column search and replacement vectors are different lengths" = 
+              length(old_names) == length(new_names))
   
   for (name_index in 1:length(old_names)){
 
@@ -51,6 +36,22 @@ column_name_replace <- function(.data, old_names, new_names){
   return(.data)
 }
 
+#Old method (had issues):
+# # Determine the location of names to replace which match vector check
+# old_index <- str_which(names(.data), str_c(old_names, collapse = "|"))
+# 
+# # Extract an array of terms which have been used
+# string_used <- na.omit(str_extract(names(.data), 
+#                                    str_c(old_names, collapse = "|")))
+# 
+# # Obtain the index of names which are to be used for replacement
+# new_index <- str_which(old_names, 
+#                        str_c(string_used, collapse = "|"))
+# 
+# # Change the variable names
+# .data %>% 
+#   rename_with(~ new_names[new_index], .cols = all_of(old_index))
 
-# hwc_2017 <- hwc_2017 %>% 
+# Even older method (produced warnings):
+# .data <- .data %>% 
 #   rename_with(~new_name[which(str_detect(.x, old_names))], .cols = contains(old_names))
