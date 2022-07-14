@@ -8,6 +8,8 @@ the cleaning scripts, data and analysis.
 combines into one data file. This is the data is then analysed based upon the 
 output from this. All scripts and data are stored with this.
 
+![](candy_image.jpg) 
+
 ## Installations
 Ensure the following packages are installed prior to running:
 
@@ -68,7 +70,7 @@ Output:
  
 [Link to raw data](raw_data/)
 
-[Link to cleaning script](cleaning_script/halloween_candy_clean_script.R)
+[Link to cleaning script](data_cleaning_scripts/halloween_candy_clean_script.R)
 
 [Link to cleaned data](clean_data/halloween_candy_clean.rds)
 
@@ -165,13 +167,13 @@ The .Rmd file is to analyse the halloween_candy_clean.rds file.
 The raw data set is a csv for each year (2015-2017) and is stored within the 
 /raw_data sub folder. This has been cleaned as mentioned above.
 
-[Link to analysis](analysis_and_documentation/halloween_candy_analysis.rmd)
+[Link to analysis](analysis_and_documentation/halloween_candy_analysis.Rmd)
 
 [Link to analysis rmd output](analysis_and_documentation/halloween_candy_analysis.html)
 
 [Link to raw data](raw_data/)
 
-[Link to cleaning script](cleaning_script/halloween_candy_clean_script.R)
+[Link to cleaning script](data_cleaning_scripts/halloween_candy_clean_script.R)
 
 [Link to cleaned data](clean_data/halloween_candy_clean.rds)
 

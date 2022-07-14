@@ -14,11 +14,11 @@ output:
 This raw data set is seabirds_raw.xls and is stored within the raw_data sub
 folder.
 
-[Link to raw data](clean_data/birds_cleaned.csv)
+[Link to cleaned data](clean_data/birds_cleaned.csv)
 
 [Link to cleaning script](data_cleaning_scripts/seabirds_clean_script.R)
 
-[Link to cleaned data](raw_data/seabirds_raw.xls)
+[Link to raw data](raw_data/seabirds_raw.xls)
 
 > Questions whicch are being analysed
 1. Which bird had the most individual sightings?
@@ -47,7 +47,7 @@ birds <- read_csv(here::here("clean_data/birds_cleaned.csv"))
 # 1. Which bird has the most individual sightings
 Most individual sightings- count of _recordings_ for each bird
 Filter to obtain the largest number with slice_max
-`mutate()` has been used instead of summary to keep the 
+`mutate()` has been used instead of summary to keep the columns. 
 
 >Note that the same birds of different age/sex/plumage have been joined together
 in the cleaning process.
@@ -65,6 +65,7 @@ birds %>%
 
 # 2. Which bird had the highest total count?
 
+Group the species common name, then sum the `number_birds`
 
 ```{r}
 birds %>% 
