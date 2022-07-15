@@ -165,12 +165,12 @@ candy %>%
 # 6. What was the most popular candy bar by this rating system for each gender in the dataset ?
 
 Add a column to change the "thoughts" to the rating defined above. Then group
-the sweets and complete a sum before slicing for the most popular.
+the sweets and gender and complete a sum before slicing for the most popular.
 
 ```{r}
 candy %>% 
   add_rating_score() %>% 
-  group_by(sweet_name) %>% 
+  group_by(gender, sweet_name) %>% 
   summarise(rating_score = sum(rating, na.rm = TRUE)) %>% 
   slice_max(rating_score, n = 1)
 ```
