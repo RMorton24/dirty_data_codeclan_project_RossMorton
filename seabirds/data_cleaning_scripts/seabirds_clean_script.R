@@ -50,17 +50,15 @@ library(rstudioapi)
 
 ## Load in bird column names----------------------------------------------------
 
-# Get the column types based off of the bird code sheet
-# Note that this was added in due to the warning for columns becoming incorrect
-# values- so creating a vector of strings to give what each column is.
+
 bird_code_class <- read_xls(here::here("raw_data/seabirds_raw.xls"),
-                      sheet = "Bird data codes", skip = 1) %>% 
+                            sheet = "Bird data codes", skip = 1) %>% 
   clean_names() %>% 
   drop_na(label) %>%
   distinct(label) %>% 
   mutate(class_detection = case_when(
-    str_detect(label, "^N") | str_to_lower(label) == "count" | 
-      str_detect(label, "(?i)record") | str_detect(label, "^WAN") ~ "numeric",
+    str_detect(label, "^N|(?i)record|^WAN") | str_to_lower(label) == "count" 
+       ~ "numeric",
     TRUE ~ "text"
   )) %>% 
   pull(class_detection)
